@@ -3,9 +3,11 @@ mod crypto;
 mod db;
 mod error;
 mod models;
+mod oidc;
 mod state;
 
 use axum::{extract::State, routing::get, Json, Router};
+use oidc::{discovery, jwks};
 use std::{net::SocketAddr, sync::Arc};
 
 #[tokio::main]
@@ -17,6 +19,8 @@ async fn main() -> anyhow::Result<()> {
 
     let app = Router::new()
         .route("/health", get(health))
+        .route("/.well-known/openid-configuration", get(discovery::handler))
+        .route("/.well-known/jwks.json", get(jwks::handler))
         .with_state(app_state);
 
     let addr = SocketAddr::from(([0, 0, 0, 0], config.port));
