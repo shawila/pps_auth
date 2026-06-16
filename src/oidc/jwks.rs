@@ -3,6 +3,6 @@ use serde_json::Value;
 use std::sync::Arc;
 use crate::state::AppState;
 
-pub async fn handler(State(state): State<Arc<AppState>>) -> Json<Value> {
-    Json(state.jwks.clone())
+pub async fn handler(State(state): State<Arc<AppState>>) -> Json<Arc<Value>> {
+    Json(Arc::clone(&state.jwks))
 }

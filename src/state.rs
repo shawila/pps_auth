@@ -24,7 +24,7 @@ pub struct AppState {
     pub pool: PgPool,
     pub encoding_key: EncodingKey,
     pub decoding_key: DecodingKey,
-    pub jwks: Value,
+    pub jwks: Arc<Value>,
     pub base_url: String,
     pub google_client: BasicClient,
     pub webauthn: Arc<Webauthn>,
@@ -47,7 +47,7 @@ impl AppState {
 
         let jwks_raw = fs::read_to_string(&config.jwks_path)
             .map_err(|_| anyhow::anyhow!("Cannot read {}", config.jwks_path))?;
-        let jwks: Value = serde_json::from_str(&jwks_raw)?;
+        let jwks: Arc<Value> = Arc::new(serde_json::from_str(&jwks_raw)?);
 
         let google_client = BasicClient::new(
             ClientId::new(config.google_client_id.clone()),
