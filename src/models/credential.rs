@@ -7,7 +7,7 @@ use uuid::Uuid;
 pub struct Credential {
     pub id: Uuid,
     pub user_id: Uuid,
-    pub r#type: String,
+    pub credential_type: String,
     pub provider_id: String,
     pub credential_data: Value,
     pub created_at: OffsetDateTime,
@@ -27,7 +27,7 @@ impl Credential {
                VALUES ($1, $2, $3, $4, $5)
                ON CONFLICT (type, provider_id)
                DO UPDATE SET credential_data = EXCLUDED.credential_data
-               RETURNING id, user_id, type, provider_id, credential_data, created_at"#,
+               RETURNING id, user_id, type AS credential_type, provider_id, credential_data, created_at"#,
             Uuid::new_v4(),
             user_id,
             cred_type,
@@ -45,7 +45,7 @@ impl Credential {
     ) -> sqlx::Result<Option<Self>> {
         sqlx::query_as!(
             Self,
-            "SELECT id, user_id, type, provider_id, credential_data, created_at
+            "SELECT id, user_id, type AS credential_type, provider_id, credential_data, created_at
              FROM pps_auth.credentials WHERE type = $1 AND provider_id = $2",
             cred_type,
             provider_id

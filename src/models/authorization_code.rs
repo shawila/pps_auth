@@ -16,6 +16,7 @@ pub struct AuthorizationCode {
 }
 
 impl AuthorizationCode {
+    /// pkce_method is always 'S256'; this server does not support plain PKCE.
     pub async fn create(
         pool: &PgPool,
         client_id: &str,
