@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>pps_auth — Authorization Flow</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #0f1117;
+      color: #e2e8f0;
+      min-height: 100vh;
+      padding: 40px 24px 80px;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: #f8fafc;
+      margin-bottom: 6px;
+      letter-spacing: -0.02em;
+    }
+
+    .subtitle {
+      text-align: center;
+      font-size: 0.875rem;
+      color: #64748b;
+      margin-bottom: 48px;
+    }
+
+    /* Tab switcher */
+    .tabs {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 40px;
+    }
+
+    .tab {
+      padding: 8px 20px;
+      border-radius: 8px;
+      border: 1px solid #1e293b;
+      background: #1e293b;
+      color: #94a3b8;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .tab:hover { border-color: #334155; color: #cbd5e1; }
+
+    .tab.active {
+      background: #6366f1;
+      border-color: #6366f1;
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .flow-section { display: none; }
+    .flow-section.active { display: block; }
+
+    /* Actors row */
+    .diagram {
+      max-width: 960px;
+      margin: 0 auto;
+      position: relative;
+    }
+
+    .actors {
+      display: grid;
+      gap: 0;
+      margin-bottom: 0;
+    }
+
+    .actors-4 { grid-template-columns: repeat(4, 1fr); }
+    .actors-3 { grid-template-columns: repeat(3, 1fr); }
+
+    .actor {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .actor-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      border: 1px solid;
+    }
+
+    .actor-label {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: #94a3b8;
+      text-align: center;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+
+    .actor-sublabel {
+      font-size: 0.7rem;
+      color: #475569;
+      text-align: center;
+      margin-top: -6px;
+    }
+
+    /* Lifeline */
+    .lifelines {
+      display: grid;
+      gap: 0;
+      position: relative;
+    }
+
+    .lifelines-4 { grid-template-columns: repeat(4, 1fr); }
+    .lifelines-3 { grid-template-columns: repeat(3, 1fr); }
+
+    .lifeline-col {
+      display: flex;
+      justify-content: center;
+      position: relative;
+    }
+
+    .lifeline-col::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 50%;
+      width: 1px;
+      background: repeating-linear-gradient(
+        to bottom,
+        #1e293b 0px,
+        #1e293b 6px,
+        transparent 6px,
+        transparent 12px
+      );
+    }
+
+    /* Steps */
+    .steps { display: flex; flex-direction: column; gap: 0; }
+
+    .step {
+      position: relative;
+      min-height: 64px;
+      display: flex;
+      align-items: center;
+    }
+
+    /* Arrow line spanning from col A to col B */
+    .arrow {
+      position: absolute;
+      height: 2px;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+
+    .arrow-line {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 12px;
+      height: 2px;
+      border-radius: 1px;
+    }
+
+    .arrow-head {
+      position: absolute;
+      right: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 0;
+      height: 0;
+    }
+
+    .arrow-head-right {
+      border-top: 6px solid transparent;
+      border-bottom: 6px solid transparent;
+      border-left: 10px solid;
+    }
+
+    .arrow-head-left {
+      left: 0;
+      right: auto;
+      border-top: 6px solid transparent;
+      border-bottom: 6px solid transparent;
+      border-right: 10px solid;
+    }
+
+    /* Label */
+    .step-label {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-100%) translateY(-4px);
+      font-size: 0.78rem;
+      color: #cbd5e1;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    .step-note {
+      position: absolute;
+      top: 50%;
+      transform: translateY(4px);
+      font-size: 0.68rem;
+      color: #475569;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    /* Step number badge */
+    .step-num {
+      position: absolute;
+      left: -32px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #1e293b;
+      border: 1px solid #334155;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: #64748b;
+    }
+
+    /* Color themes per actor */
+    .color-browser  { background: #1e3a5f; border-color: #2563eb; }
+    .color-app      { background: #1a3a2a; border-color: #16a34a; }
+    .color-auth     { background: #3b1f5e; border-color: #7c3aed; }
+    .color-google   { background: #3a1a1a; border-color: #dc2626; }
+
+    .arrow-browser  { background: #2563eb; }
+    .arrow-app      { background: #16a34a; }
+    .arrow-auth     { background: #7c3aed; }
+    .arrow-google   { background: #dc2626; }
+    .arrow-return   { background: #64748b; }
+
+    .arrow-head-browser { border-left-color: #2563eb; border-right-color: #2563eb; }
+    .arrow-head-app     { border-left-color: #16a34a; border-right-color: #16a34a; }
+    .arrow-head-auth    { border-left-color: #7c3aed; border-right-color: #7c3aed; }
+    .arrow-head-google  { border-left-color: #dc2626; border-right-color: #dc2626; }
+    .arrow-head-return  { border-left-color: #64748b; border-right-color: #64748b; }
+
+    /* Self-arrow (loopback) */
+    .self-box {
+      position: absolute;
+      border: 1px dashed #334155;
+      border-radius: 6px;
+      padding: 6px 12px;
+      font-size: 0.75rem;
+      color: #64748b;
+      background: #0f1117;
+      white-space: nowrap;
+    }
+
+    /* Legend */
+    .legend {
+      max-width: 960px;
+      margin: 40px auto 0;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      padding: 20px;
+      background: #141924;
+      border: 1px solid #1e293b;
+      border-radius: 12px;
+    }
+
+    .legend-title {
+      width: 100%;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #475569;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 4px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.78rem;
+      color: #94a3b8;
+    }
+
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* Claim box */
+    .claims-box {
+      max-width: 960px;
+      margin: 32px auto 0;
+      background: #141924;
+      border: 1px solid #1e293b;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .claims-header {
+      padding: 14px 20px;
+      background: #1e293b;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #94a3b8;
+      letter-spacing: 0.04em;
+    }
+
+    .claims-body {
+      padding: 20px;
+    }
+
+    pre {
+      font-family: "JetBrains Mono", "Fira Code", "Cascadia Code", monospace;
+      font-size: 0.82rem;
+      line-height: 1.7;
+      color: #e2e8f0;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+
+    .json-key    { color: #7dd3fc; }
+    .json-str    { color: #86efac; }
+    .json-num    { color: #fbbf24; }
+    .json-arr    { color: #f472b6; }
+    .json-comment { color: #475569; font-style: italic; }
+
+    /* SVG diagram */
+    .svg-wrap {
+      max-width: 960px;
+      margin: 0 auto;
+      background: #141924;
+      border: 1px solid #1e293b;
+      border-radius: 16px;
+      overflow: hidden;
+      padding: 32px 16px;
+    }
+
+    svg text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  </style>
+</head>
+<body>
+
+  <h1>pps_auth — Authorization Flows</h1>
+  <p class="subtitle">OIDC Authorization Code + PKCE · RS256 · Passkeys · Google OAuth</p>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('login')">Login Flow</button>
+    <button class="tab" onclick="switchTab('token')">Token Validation</button>
+    <button class="tab" onclick="switchTab('google')">Google OAuth</button>
+    <button class="tab" onclick="switchTab('passkey')">Passkey</button>
+    <button class="tab" onclick="switchTab('refresh')">Refresh Token</button>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- TAB 1: Login Flow (Authorization Code + PKCE)                 -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <div class="flow-section active" id="tab-login">
+    <div class="svg-wrap">
+      <svg viewBox="0 0 880 720" width="100%" xmlns="http://www.w3.org/2000/svg">
+
+        <!-- Column centers: Browser=110, SisterApp=330, pps_auth=550, Google=770 -->
+
+        <!-- Actor boxes -->
+        <rect x="62" y="20" width="96" height="52" rx="10" fill="#1e3a5f" stroke="#2563eb" stroke-width="1.5"/>
+        <text x="110" y="42" text-anchor="middle" fill="#93c5fd" font-size="11" font-weight="600">🌐</text>
+        <text x="110" y="58" text-anchor="middle" fill="#93c5fd" font-size="11" font-weight="600">Browser</text>
+
+        <rect x="282" y="20" width="96" height="52" rx="10" fill="#1a3a2a" stroke="#16a34a" stroke-width="1.5"/>
+        <text x="330" y="42" text-anchor="middle" fill="#86efac" font-size="11" font-weight="600">⚡</text>
+        <text x="330" y="58" text-anchor="middle" fill="#86efac" font-size="11" font-weight="600">Sister App</text>
+
+        <rect x="502" y="20" width="96" height="52" rx="10" fill="#3b1f5e" stroke="#7c3aed" stroke-width="1.5"/>
+        <text x="550" y="42" text-anchor="middle" fill="#c4b5fd" font-size="11" font-weight="600">🔐</text>
+        <text x="550" y="58" text-anchor="middle" fill="#c4b5fd" font-size="11" font-weight="600">pps_auth</text>
+
+        <!-- Lifelines -->
+        <line x1="110" y1="72" x2="110" y2="700" stroke="#1e293b" stroke-width="1" stroke-dasharray="6,6"/>
+        <line x1="330" y1="72" x2="330" y2="700" stroke="#1e293b" stroke-width="1" stroke-dasharray="6,6"/>
+        <line x1="550" y1="72" x2="550" y2="700" stroke="#1e293b" stroke-width="1" stroke-dasharray="6,6"/>
+
+        <!-- Step labels (right side) -->
+        <text x="600" y="106" fill="#475569" font-size="10">① User clicks "Login"</text>
+        <text x="600" y="162" fill="#475569" font-size="10">② App generates code_verifier,</text>
+        <text x="600" y="174" fill="#475569" font-size="10">   code_challenge (S256), state</text>
+        <text x="600" y="222" fill="#475569" font-size="10">③ Browser redirected to pps_auth</text>
+        <text x="600" y="282" fill="#475569" font-size="10">④ pps_auth validates client_id,</text>
+        <text x="600" y="294" fill="#475569" font-size="10">   redirect_uri, stores challenge</text>
+        <text x="600" y="342" fill="#475569" font-size="10">⑤ Login page shown to user</text>
+        <text x="600" y="402" fill="#475569" font-size="10">⑥ User authenticates</text>
+        <text x="600" y="414" fill="#475569" font-size="10">   (Google or Passkey)</text>
+        <text x="600" y="462" fill="#475569" font-size="10">⑦ pps_auth issues short-lived</text>
+        <text x="600" y="474" fill="#475569" font-size="10">   code (5 min, single-use)</text>
+        <text x="600" y="522" fill="#475569" font-size="10">⑧ App backend exchanges code</text>
+        <text x="600" y="534" fill="#475569" font-size="10">   + verifier for tokens</text>
+        <text x="600" y="582" fill="#475569" font-size="10">⑨ pps_auth verifies PKCE,</text>
+        <text x="600" y="594" fill="#475569" font-size="10">   issues id_token + refresh</text>
+        <text x="600" y="642" fill="#475569" font-size="10">⑩ App validates id_token</text>
+        <text x="600" y="654" fill="#475569" font-size="10">   locally via JWKS public key</text>
+        <text x="600" y="692" fill="#475569" font-size="10">⑪ Session created, user in</text>
+
+        <!-- ① Browser → Sister App -->
+        <line x1="110" y1="100" x2="318" y2="100" stroke="#2563eb" stroke-width="1.5"/>
+        <polygon points="318,95 330,100 318,105" fill="#2563eb"/>
+        <text x="210" y="94" text-anchor="middle" fill="#93c5fd" font-size="10" font-weight="500">GET /login</text>
+
+        <!-- ② Sister App self (PKCE generation) -->
+        <rect x="330" y="138" width="160" height="28" rx="6" fill="#141924" stroke="#1e293b" stroke-width="1"/>
+        <text x="410" y="157" text-anchor="middle" fill="#64748b" font-size="10">generate PKCE + state</text>
+
+        <!-- ③ Sister App → pps_auth (redirect) via Browser -->
+        <line x1="330" y1="216" x2="122" y2="216" stroke="#16a34a" stroke-width="1.5"/>
+        <polygon points="122,211 110,216 122,221" fill="#16a34a"/>
+        <text x="216" y="210" text-anchor="middle" fill="#86efac" font-size="10" font-weight="500">302 → /authorize?client_id=…&amp;code_challenge=…</text>
+
+        <!-- ③b Browser → pps_auth -->
+        <line x1="110" y1="246" x2="538" y2="246" stroke="#2563eb" stroke-width="1.5"/>
+        <polygon points="538,241 550,246 538,251" fill="#2563eb"/>
+        <text x="326" y="240" text-anchor="middle" fill="#93c5fd" font-size="10" font-weight="500">GET /authorize (redirect followed)</text>
+
+        <!-- ④ pps_auth validate (self) -->
+        <rect x="470" y="262" width="160" height="28" rx="6" fill="#141924" stroke="#1e293b" stroke-width="1"/>
+        <text x="550" y="281" text-anchor="middle" fill="#64748b" font-size="10">validate + store challenge</text>
+
+        <!-- ⑤ pps_auth → Browser (login page) -->
+        <line x1="550" y1="336" x2="122" y2="336" stroke="#7c3aed" stroke-width="1.5"/>
+        <polygon points="122,331 110,336 122,341" fill="#7c3aed"/>
+        <text x="326" y="330" text-anchor="middle" fill="#c4b5fd" font-size="10" font-weight="500">200 Login Page (Google btn + Passkey btn)</text>
+
+        <!-- ⑥ Browser → pps_auth (credential) -->
+        <line x1="110" y1="396" x2="538" y2="396" stroke="#2563eb" stroke-width="1.5"/>
+        <polygon points="538,391 550,396 538,401" fill="#2563eb"/>
+        <text x="326" y="390" text-anchor="middle" fill="#93c5fd" font-size="10" font-weight="500">POST /login (credential)</text>
+
+        <!-- ⑦ pps_auth issues code, redirects -->
+        <line x1="550" y1="456" x2="122" y2="456" stroke="#7c3aed" stroke-width="1.5"/>
+        <polygon points="122,451 110,456 122,461" fill="#7c3aed"/>
+        <text x="326" y="450" text-anchor="middle" fill="#c4b5fd" font-size="10" font-weight="500">302 → redirect_uri?code=…&amp;state=…</text>
+
+        <!-- ⑧ Browser → Sister App with code -->
+        <line x1="110" y1="516" x2="318" y2="516" stroke="#2563eb" stroke-width="1.5"/>
+        <polygon points="318,511 330,516 318,521" fill="#2563eb"/>
+        <text x="216" y="510" text-anchor="middle" fill="#93c5fd" font-size="10" font-weight="500">GET /callback?code=…</text>
+
+        <!-- ⑧b Sister App → pps_auth token exchange -->
+        <line x1="330" y1="546" x2="538" y2="546" stroke="#16a34a" stroke-width="1.5"/>
+        <polygon points="538,541 550,546 538,551" fill="#16a34a"/>
+        <text x="436" y="540" text-anchor="middle" fill="#86efac" font-size="10" font-weight="500">POST /token (code + verifier)</text>
+
+        <!-- ⑨ pps_auth returns tokens -->
+        <line x1="550" y1="576" x2="342" y2="576" stroke="#7c3aed" stroke-width="1.5"/>
+        <polygon points="342,571 330,576 342,581" fill="#7c3aed"/>
+        <text x="436" y="570" text-anchor="middle" fill="#c4b5fd" font-size="10" font-weight="500">id_token + access_token + refresh_token</text>
+
+        <!-- ⑩ Sister App self (validate JWKS) -->
+        <rect x="250" y="612" width="160" height="28" rx="6" fill="#141924" stroke="#1e293b" stroke-width="1"/>
+        <text x="330" y="631" text-anchor="middle" fill="#64748b" font-size="10">verify RS256 sig (cached key)</text>
+
+        <!-- ⑪ Sister App → Browser (session) -->
+        <line x1="330" y1="686" x2="122" y2="686" stroke="#16a34a" stroke-width="1.5"/>
+        <polygon points="122,681 110,686 122,691" fill="#16a34a"/>
+        <text x="216" y="680" text-anchor="middle" fill="#86efac" font-size="10" font-weight="500">Set-Cookie: session</text>
+
+      </svg>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- TAB 2: Token Validation (per-request)                         -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <div class="flow-section" id="tab-token">
+    <div class="svg-wrap">
+      <svg viewBox="0 0 880 400" width="100%" xmlns="http://www.w3.org/2000/svg">
+
+        <!-- Actors: Client=110, SisterApp=370, pps_auth=630 -->
+
+        <rect x="62" y="20" width="96" height="52" rx="10" fill="#1e3a5f" stroke="#2563eb" stroke-width="1.5"/>
+        <text x="110" y="42" text-anchor="middle" fill="#93c5fd" font-size="11" font-weight="600">🌐</text>
+        <text x="110" y="58" text-anchor="middle" fill="#93c5fd" font-size="11" font-weight="600">Client</text>
+
+        <rect x="322" y="20" width="96" height="52" rx="10" fill="#1a3a2a" stroke="#16a34a" stroke-width="1.5"/>
+        <text x="370" y="42" text-anchor="middle" fill="#86efac" font-size="11" font-weight="600">⚡</text>
+        <text x="370" y="58" text-anchor="middle" fill="#86efac" font-size="11" font-weight="600">Sister App</text>
+
+        <rect x="582" y="20" width="96" height="52" rx="10" fill="#3b1f5e" stroke="#7c3aed" stroke-width="1.5"/>
+        <text x="630" y="42" text-anchor="middle" fill="#c4b5fd" font-size="11" font-weight="600">🔐</text>
+        <text x="630" y="58" text-anchor="middle" fill="#c4b5fd" font-size="11" font-weight="600">pps_auth</text>
+
+        <!-- Lifelines -->
+        <line x1="110" y1="72" x2="110" y2="380" stroke="#1e293b" stroke-width="1" stroke-dasharray="6,6"/>
+        <line x1="370" y1="72" x2="370" y2="380" stroke="#1e293b" stroke-width="1" stroke-dasharray="6,6"/>
+        <line x1="630" y1="72" x2="630" y2="380" stroke="#1e293b" stroke-width="1" stroke-dasharray="6,6"/>
+
+        <!-- Startup: Sister App fetches JWKS once -->
+        <rect x="440" y="86" width="240" height="28" rx="6" fill="#141924" stroke="#334155" stroke-width="1"/>
+        <text x="560" y="105" text-anchor="middle" fill="#475569" font-size="10">Startup: fetch /.well-known/jwks.json (cached)</text>
+
+        <line x1="370" y1="100" x2="618" y2="100" stroke="#64748b" stroke-width="1" stroke-dasharray="4,4"/>
+        <polygon points="618,95 630,100 618,105" fill="#64748b"/>
+
+        <!-- Request with Bearer token -->
+        <line x1="110" y1="160" x2="358" y2="160" stroke="#2563eb" stroke-width="1.5"/>
+        <polygon points="358,155 370,160 358,165" fill="#2563eb"/>
+        <text x="236" y="152" text-anchor="middle" fill="#93c5fd" font-size="10" font-weight="500">GET /api/v1/… Authorization: Bearer &lt;token&gt;</text>
+
+        <!-- Sister App validates locally -->
+        <rect x="290" y="178" width="160" height="52" rx="6" fill="#141924" stroke="#1e293b" stroke-width="1"/>
+        <text x="370" y="196" text-anchor="middle" fill="#64748b" font-size="10">1. verify RS256 signature</text>
+        <text x="370" y="210" text-anchor="middle" fill="#64748b" font-size="10">2. check iss, aud, exp</text>
+        <text x="370" y="224" text-anchor="middle" fill="#64748b" font-size="10">3. extract roles claim</text>
+
+        <!-- No network call note -->
+        <text x="680" y="208" fill="#16a34a" font-size="10" font-weight="600">✓ No network call</text>
+        <text x="680" y="222" fill="#475569" font-size="10">to pps_auth needed</text>
+
+        <!-- Response -->
+        <line x1="370" y1="260" x2="122" y2="260" stroke="#16a34a" stroke-width="1.5"/>
+        <polygon points="122,255 110,260 122,265" fill="#16a34a"/>
+        <text x="236" y="252" text-anchor="middle" fill="#86efac" font-size="10" font-weight="500">200 OK (or 401 if invalid)</text>
+
+        <!-- Token expiry note -->
+        <rect x="60" y="298" width="760" height="56" rx="8" fill="#141924" stroke="#334155" stroke-width="1"/>
+        <text x="440" y="318" text-anchor="middle" fill="#64748b" font-size="11" font-weight="600">Token Lifetimes</text>
+        <text x="200" y="340" text-anchor="middle" fill="#475569" font-size="10">access_token: 15 min → use refresh_token to renew</text>
+        <text x="600" y="340" text-anchor="middle" fill="#475569" font-size="10">refresh_token: 30 days (rotating) → POST /token grant_type=refresh_token</text>
+
+      </svg>
+    </div>
+
+    <div class="claims-box" style="margin-top:24px">
+      <div class="claims-header">JWT PAYLOAD EXAMPLE (id_token)</div>
+      <div class="claims-body">
+        <pre><span class="json-key">{</span>
+  <span class="json-key">"iss"</span>:   <span class="json-str">"https://auth.yourdomain.com"</span>,  <span class="json-comment">// pps_auth base URL</span>
+  <span class="json-key">"sub"</span>:   <span class="json-str">"550e8400-e29b-41d4-a716-446655440000"</span>,
+  <span class="json-key">"aud"</span>:   <span class="json-str">"portfolio_chatbot"</span>,            <span class="json-comment">// client_id of the relying party</span>
+  <span class="json-key">"exp"</span>:   <span class="json-num">1750000000</span>,                     <span class="json-comment">// 15 minutes from iat</span>
+  <span class="json-key">"iat"</span>:   <span class="json-num">1749999100</span>,
+  <span class="json-key">"nonce"</span>: <span class="json-str">"random-client-nonce"</span>,
+  <span class="json-key">"email"</span>: <span class="json-str">"salah@tripla.jp"</span>,
+  <span class="json-key">"name"</span>:  <span class="json-str">"Salah Hawila"</span>,
+  <span class="json-key">"roles"</span>: <span class="json-arr">["superuser"]</span>              <span class="json-comment">// checked by sister app middleware</span>
+<span class="json-key">}</span></pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- TAB 3: Google OAuth upstream flow                             -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <div class="flow-section" id="tab-google">
+    <div class="svg-wrap">
+      <svg viewBox="0 0 880 520" width="100%" xmlns="http://www.w3.org/2000/svg">
+
+        <!-- Actors: Browser=110, pps_auth=370, Google=630 -->
+
+        <rect x="62" y="20" width="96" height="52" rx="10" fill="#1e3a5f" stroke="#2563eb" stroke-width="1.5"/>
+        <text x="110" y="42" text-anchor="middle" fill="#93c5fd" font-size="11" font-weight="600">🌐</text>
+        <text x="110" y="58" text-anchor="middle" fill="#93c5fd" font-size="11" font-weight="600">Browser</text>
+
+        <rect x="322" y="20" width="96" height="52" rx="10" fill="#3b1f5e" stroke="#7c3aed" stroke-width="1.5"/>
+        <text x="370" y="42" text-anchor="middle" fill="#c4b5fd" font-size="11" font-weight="600">🔐</text>
+        <text x="370" y="58" text-anchor="middle" fill="#c4b5fd" font-size="11" font-weight="600">pps_auth</text>
+
+        <rect x="582" y="20" width="96" height="52" rx="10" fill="#3a1a1a" stroke="#dc2626" stroke-width="1.5"/>
+        <text x="630" y="42" text-anchor="middle" fill="#fca5a5" font-size="11" font-weight="600">G</text>
+        <text x="630" y="58" text-anchor="middle" fill="#fca5a5" font-size="11" font-weight="600">Google</text>
+
+        <!-- Lifelines -->
+        <line x1="110" y1="72" x2="110" y2="500" stroke="#1e293b" stroke-width="1" stroke-dasharray="6,6"/>
+        <line x1="370" y1="72" x2="370" y2="500" stroke="#1e293b" stroke-width="1" stroke-dasharray="6,6"/>
+        <line x1="630" y1="72" x2="630" y2="500" stroke="#1e293b" stroke-width="1" stroke-dasharray="6,6"/>
+
+        <!-- Step notes -->
+        <text x="700" y="112" fill="#475569" font-size="10">① User clicks "Continue with Google"</text>
+        <text x="700" y="172" fill="#475569" font-size="10">② pps_auth builds Google auth URL</text>
+        <text x="700" y="184" fill="#475569" font-size="10">   with state param (CSRF token)</text>
+        <text x="700" y="244" fill="#475569" font-size="10">③ Browser follows redirect to Google</text>
+        <text x="700" y="304" fill="#475569" font-size="10">④ Google redirects back with code</text>
+        <text x="700" y="364" fill="#475569" font-size="10">⑤ pps_auth exchanges code for</text>
+        <text x="700" y="376" fill="#475569" font-size="10">   Google id_token (server-to-server)</text>
+        <text x="700" y="424" fill="#475569" font-size="10">⑥ Upsert user + credential in DB</text>
+        <text x="700" y="474" fill="#475569" font-size="10">⑦ Issue pps_auth code → sister app</text>
+
+        <!-- ① Browser → pps_auth (click google btn) -->
+        <line x1="110" y1="106" x2="358" y2="106" stroke="#2563eb" stroke-width="1.5"/>
+        <polygon points="358,101 370,106 358,111" fill="#2563eb"/>
+        <text x="236" y="100" text-anchor="middle" fill="#93c5fd" font-size="10">GET /auth/google</text>
+
+        <!-- ② pps_auth self (generate state) -->
+        <rect x="290" y="142" width="160" height="28" rx="6" fill="#141924" stroke="#1e293b" stroke-width="1"/>
+        <text x="370" y="161" text-anchor="middle" fill="#64748b" font-size="10">generate state + store in session</text>
+
+        <!-- ③ pps_auth → Browser (redirect to google) -->
+        <line x1="370" y1="206" x2="122" y2="206" stroke="#7c3aed" stroke-width="1.5"/>
+        <polygon points="122,201 110,206 122,211" fill="#7c3aed"/>
+        <text x="236" y="198" text-anchor="middle" fill="#c4b5fd" font-size="10">302 → accounts.google.com/o/oauth2/v2/auth?…</text>
+
+        <!-- Browser → Google -->
+        <line x1="110" y1="236" x2="618" y2="236" stroke="#2563eb" stroke-width="1.5"/>
+        <polygon points="618,231 630,236 618,241" fill="#2563eb"/>
+        <text x="366" y="228" text-anchor="middle" fill="#93c5fd" font-size="10">GET accounts.google.com (consent screen)</text>
+
+        <!-- ④ Google → Browser → pps_auth callback -->
+        <line x1="630" y1="296" x2="122" y2="296" stroke="#dc2626" stroke-width="1.5"/>
+        <polygon points="122,291 110,296 122,301" fill="#dc2626"/>
+        <text x="366" y="288" text-anchor="middle" fill="#fca5a5" font-size="10">302 → /auth/google/callback?code=…&amp;state=…</text>
+
+        <line x1="110" y1="326" x2="358" y2="326" stroke="#2563eb" stroke-width="1.5"/>
+        <polygon points="358,321 370,326 358,331" fill="#2563eb"/>
+        <text x="236" y="318" text-anchor="middle" fill="#93c5fd" font-size="10">GET /auth/google/callback?code=…</text>
+
+        <!-- ⑤ pps_auth → Google (server-to-server token exchange) -->
+        <line x1="370" y1="356" x2="618" y2="356" stroke="#7c3aed" stroke-width="1.5" stroke-dasharray="5,3"/>
+        <polygon points="618,351 630,356 618,361" fill="#7c3aed"/>
+        <text x="496" y="348" text-anchor="middle" fill="#c4b5fd" font-size="10">POST /token (server-to-server)</text>
+
+        <line x1="630" y1="386" x2="382" y2="386" stroke="#dc2626" stroke-width="1.5" stroke-dasharray="5,3"/>
+        <polygon points="382,381 370,386 382,391" fill="#dc2626"/>
+        <text x="496" y="378" text-anchor="middle" fill="#fca5a5" font-size="10">Google id_token + profile</text>
+
+        <!-- ⑥ pps_auth self (upsert user) -->
+        <rect x="290" y="404" width="160" height="28" rx="6" fill="#141924" stroke="#1e293b" stroke-width="1"/>
+        <text x="370" y="423" text-anchor="middle" fill="#64748b" font-size="10">upsert user + credential in DB</text>
+
+        <!-- ⑦ pps_auth → Browser (pps_auth code) -->
+        <line x1="370" y1="466" x2="122" y2="466" stroke="#7c3aed" stroke-width="1.5"/>
+        <polygon points="122,461 110,466 122,471" fill="#7c3aed"/>
+        <text x="236" y="458" text-anchor="middle" fill="#c4b5fd" font-size="10">302 → sister_app/callback?code=… (pps_auth code)</text>
+
+      </svg>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- TAB 4: Passkey (WebAuthn) flow                               -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <div class="flow-section" id="tab-passkey">
+    <div class="svg-wrap">
+      <svg viewBox="0 0 880 560" width="100%" xmlns="http://www.w3.org/2000/svg">
+
+        <!-- Actors: Browser=110, Authenticator=330, pps_auth=590 -->
+
+        <rect x="62" y="20" width="96" height="52" rx="10" fill="#1e3a5f" stroke="#2563eb" stroke-width="1.5"/>
+        <text x="110" y="42" text-anchor="middle" fill="#93c5fd" font-size="11" font-weight="600">🌐</text>
+        <text x="110" y="58" text-anchor="middle" fill="#93c5fd" font-size="11" font-weight="600">Browser</text>
+
+        <rect x="282" y="20" width="96" height="52" rx="10" fill="#1a2a3a" stroke="#0ea5e9" stroke-width="1.5"/>
+        <text x="330" y="42" text-anchor="middle" fill="#7dd3fc" font-size="11" font-weight="600">🔑</text>
+        <text x="330" y="58" text-anchor="middle" fill="#7dd3fc" font-size="11" font-weight="600">Authenticator</text>
+
+        <rect x="542" y="20" width="96" height="52" rx="10" fill="#3b1f5e" stroke="#7c3aed" stroke-width="1.5"/>
+        <text x="590" y="42" text-anchor="middle" fill="#c4b5fd" font-size="11" font-weight="600">🔐</text>
+        <text x="590" y="58" text-anchor="middle" fill="#c4b5fd" font-size="11" font-weight="600">pps_auth</text>
+
+        <!-- Lifelines -->
+        <line x1="110" y1="72" x2="110" y2="540" stroke="#1e293b" stroke-width="1" stroke-dasharray="6,6"/>
+        <line x1="330" y1="72" x2="330" y2="540" stroke="#1e293b" stroke-width="1" stroke-dasharray="6,6"/>
+        <line x1="590" y1="72" x2="590" y2="540" stroke="#1e293b" stroke-width="1" stroke-dasharray="6,6"/>
+
+        <!-- Headings for two flows -->
+        <rect x="60" y="88" width="760" height="20" rx="4" fill="#1e293b"/>
+        <text x="440" y="102" text-anchor="middle" fill="#64748b" font-size="10" font-weight="600" letter-spacing="1">AUTHENTICATION FLOW (Login with Passkey)</text>
+
+        <!-- ① Browser → pps_auth (start auth) -->
+        <line x1="110" y1="126" x2="578" y2="126" stroke="#2563eb" stroke-width="1.5"/>
+        <polygon points="578,121 590,126 578,131" fill="#2563eb"/>
+        <text x="346" y="118" text-anchor="middle" fill="#93c5fd" font-size="10">POST /auth/passkey/authenticate/start</text>
+
+        <!-- ② pps_auth → Browser (challenge) -->
+        <line x1="590" y1="156" x2="122" y2="156" stroke="#7c3aed" stroke-width="1.5"/>
+        <polygon points="122,151 110,156 122,161" fill="#7c3aed"/>
+        <text x="346" y="148" text-anchor="middle" fill="#c4b5fd" font-size="10">PublicKeyCredentialRequestOptions (challenge)</text>
+
+        <!-- ③ Browser → Authenticator (navigator.credentials.get) -->
+        <line x1="110" y1="196" x2="318" y2="196" stroke="#2563eb" stroke-width="1.5"/>
+        <polygon points="318,191 330,196 318,201" fill="#2563eb"/>
+        <text x="216" y="188" text-anchor="middle" fill="#93c5fd" font-size="10">navigator.credentials.get(options)</text>
+
+        <!-- ④ User biometric/PIN prompt -->
+        <rect x="250" y="214" width="160" height="28" rx="6" fill="#141924" stroke="#0ea5e9" stroke-width="1"/>
+        <text x="330" y="233" text-anchor="middle" fill="#7dd3fc" font-size="10">User: Touch ID / Face ID / PIN</text>
+
+        <!-- ⑤ Authenticator → Browser (assertion) -->
+        <line x1="330" y1="260" x2="122" y2="260" stroke="#0ea5e9" stroke-width="1.5"/>
+        <polygon points="122,255 110,260 122,265" fill="#0ea5e9"/>
+        <text x="216" y="252" text-anchor="middle" fill="#7dd3fc" font-size="10">AuthenticatorAssertionResponse</text>
+
+        <!-- ⑥ Browser → pps_auth (assertion) -->
+        <line x1="110" y1="296" x2="578" y2="296" stroke="#2563eb" stroke-width="1.5"/>
+        <polygon points="578,291 590,296 578,301" fill="#2563eb"/>
+        <text x="346" y="288" text-anchor="middle" fill="#93c5fd" font-size="10">POST /auth/passkey/authenticate/finish (assertion)</text>
+
+        <!-- ⑦ pps_auth verify + self -->
+        <rect x="510" y="314" width="160" height="44" rx="6" fill="#141924" stroke="#1e293b" stroke-width="1"/>
+        <text x="590" y="332" text-anchor="middle" fill="#64748b" font-size="10">verify signature + counter</text>
+        <text x="590" y="348" text-anchor="middle" fill="#64748b" font-size="10">update credential counter in DB</text>
+
+        <!-- ⑧ pps_auth → Browser (pps_auth code) -->
+        <line x1="590" y1="376" x2="122" y2="376" stroke="#7c3aed" stroke-width="1.5"/>
+        <polygon points="122,371 110,376 122,381" fill="#7c3aed"/>
+        <text x="346" y="368" text-anchor="middle" fill="#c4b5fd" font-size="10">302 → sister_app/callback?code=…</text>
+
+        <!-- Registration note -->
+        <rect x="60" y="402" width="760" height="20" rx="4" fill="#1e293b"/>
+        <text x="440" y="416" text-anchor="middle" fill="#64748b" font-size="10" font-weight="600" letter-spacing="1">REGISTRATION FLOW (First-time Passkey setup)</text>
+
+        <text x="440" y="446" text-anchor="middle" fill="#475569" font-size="10">POST /auth/passkey/register/start  →  PublicKeyCredentialCreationOptions (challenge + user)</text>
+        <text x="440" y="466" text-anchor="middle" fill="#475569" font-size="10">navigator.credentials.create(options)  →  Authenticator generates keypair  →  returns attestation</text>
+        <text x="440" y="486" text-anchor="middle" fill="#475569" font-size="10">POST /auth/passkey/register/finish (attestation)  →  pps_auth verifies + stores public key in DB</text>
+        <text x="440" y="510" text-anchor="middle" fill="#16a34a" font-size="10" font-weight="600">Private key never leaves the authenticator device.</text>
+
+      </svg>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- TAB 5: Refresh Token flow                                     -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <div class="flow-section" id="tab-refresh">
+    <div class="svg-wrap">
+      <svg viewBox="0 0 880 420" width="100%" xmlns="http://www.w3.org/2000/svg">
+
+        <!-- Actors: SisterApp=220, pps_auth=550 -->
+
+        <rect x="172" y="20" width="96" height="52" rx="10" fill="#1a3a2a" stroke="#16a34a" stroke-width="1.5"/>
+        <text x="220" y="42" text-anchor="middle" fill="#86efac" font-size="11" font-weight="600">⚡</text>
+        <text x="220" y="58" text-anchor="middle" fill="#86efac" font-size="11" font-weight="600">Sister App</text>
+
+        <rect x="502" y="20" width="96" height="52" rx="10" fill="#3b1f5e" stroke="#7c3aed" stroke-width="1.5"/>
+        <text x="550" y="42" text-anchor="middle" fill="#c4b5fd" font-size="11" font-weight="600">🔐</text>
+        <text x="550" y="58" text-anchor="middle" fill="#c4b5fd" font-size="11" font-weight="600">pps_auth</text>
+
+        <!-- Lifelines -->
+        <line x1="220" y1="72" x2="220" y2="400" stroke="#1e293b" stroke-width="1" stroke-dasharray="6,6"/>
+        <line x1="550" y1="72" x2="550" y2="400" stroke="#1e293b" stroke-width="1" stroke-dasharray="6,6"/>
+
+        <!-- Detect expiry note -->
+        <rect x="140" y="90" width="160" height="28" rx="6" fill="#141924" stroke="#1e293b" stroke-width="1"/>
+        <text x="220" y="109" text-anchor="middle" fill="#64748b" font-size="10">access_token expired (15 min)</text>
+
+        <!-- POST /token refresh -->
+        <line x1="220" y1="146" x2="538" y2="146" stroke="#16a34a" stroke-width="1.5"/>
+        <polygon points="538,141 550,146 538,151" fill="#16a34a"/>
+        <text x="382" y="138" text-anchor="middle" fill="#86efac" font-size="10" font-weight="500">POST /token  grant_type=refresh_token  refresh_token=&lt;token&gt;</text>
+
+        <!-- pps_auth self: verify + rotate -->
+        <rect x="470" y="164" width="160" height="52" rx="6" fill="#141924" stroke="#1e293b" stroke-width="1"/>
+        <text x="550" y="182" text-anchor="middle" fill="#64748b" font-size="10">1. lookup token hash in DB</text>
+        <text x="550" y="196" text-anchor="middle" fill="#64748b" font-size="10">2. verify not revoked / expired</text>
+        <text x="550" y="210" text-anchor="middle" fill="#64748b" font-size="10">3. revoke old → issue new token</text>
+
+        <!-- Return new tokens -->
+        <line x1="550" y1="240" x2="232" y2="240" stroke="#7c3aed" stroke-width="1.5"/>
+        <polygon points="232,235 220,240 232,245" fill="#7c3aed"/>
+        <text x="382" y="232" text-anchor="middle" fill="#c4b5fd" font-size="10" font-weight="500">new access_token + new refresh_token</text>
+
+        <!-- Stolen token scenario -->
+        <rect x="60" y="272" width="760" height="20" rx="4" fill="#1e293b"/>
+        <text x="440" y="286" text-anchor="middle" fill="#64748b" font-size="10" font-weight="600" letter-spacing="1">STOLEN TOKEN DETECTION</text>
+
+        <line x1="220" y1="316" x2="538" y2="316" stroke="#dc2626" stroke-width="1.5" stroke-dasharray="5,3"/>
+        <polygon points="538,311 550,316 538,321" fill="#dc2626"/>
+        <text x="382" y="308" text-anchor="middle" fill="#fca5a5" font-size="10">POST /token  refresh_token=&lt;already-rotated token&gt;</text>
+
+        <rect x="470" y="330" width="160" height="28" rx="6" fill="#3a1a1a" stroke="#dc2626" stroke-width="1"/>
+        <text x="550" y="349" text-anchor="middle" fill="#fca5a5" font-size="10">token already revoked → ALERT</text>
+
+        <line x1="550" y1="374" x2="232" y2="374" stroke="#dc2626" stroke-width="1.5"/>
+        <polygon points="232,369 220,374 232,379" fill="#dc2626"/>
+        <text x="382" y="366" text-anchor="middle" fill="#fca5a5" font-size="10" font-weight="500">400 invalid_grant  (revoke all tokens for this user)</text>
+
+      </svg>
+    </div>
+  </div>
+
+  <!-- Legend -->
+  <div class="legend">
+    <div class="legend-title">Actor Colors</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#2563eb"></div>Browser / Client</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#16a34a"></div>Sister App (Relying Party)</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#7c3aed"></div>pps_auth (OIDC AS)</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#dc2626"></div>Google (upstream IdP)</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#0ea5e9"></div>Authenticator (device)</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#64748b"></div>Internal / startup call</div>
+  </div>
+
+  <script>
+    function switchTab(name) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.flow-section').forEach(s => s.classList.remove('active'));
+      document.getElementById('tab-' + name).classList.add('active');
+      event.target.classList.add('active');
+    }
+  </script>
+
+</body>
+</html>
