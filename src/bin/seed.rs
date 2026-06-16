@@ -1,3 +1,3 @@
 fn main() {
-    println!("seed stub");
+    println!("Seed: implement in Task 13");
 }
