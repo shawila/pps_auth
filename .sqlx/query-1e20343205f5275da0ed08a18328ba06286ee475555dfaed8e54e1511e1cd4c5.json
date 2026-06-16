@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT role FROM pps_auth.roles\n             WHERE user_id = $1 AND (client_id IS NULL OR client_id = $2)",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "role",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "1e20343205f5275da0ed08a18328ba06286ee475555dfaed8e54e1511e1cd4c5"
+}

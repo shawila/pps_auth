@@ -1,0 +1,52 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id, user_id, client_id, token_hash, expires_at, revoked_at\n               FROM pps_auth.refresh_tokens\n               WHERE token_hash = $1 AND revoked_at IS NULL AND expires_at > NOW()",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "user_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "client_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "token_hash",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "expires_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 5,
+        "name": "revoked_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "a06e13dbc163a3a65c934dfcded64563dcde1c2c3e7fd078ba9dcaa746e1f054"
+}

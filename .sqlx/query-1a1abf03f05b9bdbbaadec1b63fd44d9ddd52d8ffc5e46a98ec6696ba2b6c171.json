@@ -1,0 +1,42 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO pps_auth.users (id, email, name)\n               VALUES ($1, $2, $3)\n               ON CONFLICT (email) DO UPDATE SET name = COALESCE(EXCLUDED.name, pps_auth.users.name)\n               RETURNING id, email, name, created_at",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "email",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      false
+    ]
+  },
+  "hash": "1a1abf03f05b9bdbbaadec1b63fd44d9ddd52d8ffc5e46a98ec6696ba2b6c171"
+}

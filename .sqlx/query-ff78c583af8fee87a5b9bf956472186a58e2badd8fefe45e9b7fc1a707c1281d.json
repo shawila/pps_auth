@@ -1,0 +1,75 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO pps_auth.authorization_codes\n               (id, client_id, user_id, code_hash, pkce_challenge, pkce_method, scopes, expires_at)\n               VALUES ($1, $2, $3, $4, $5, 'S256', $6, NOW() + INTERVAL '5 minutes')\n               RETURNING id, client_id, user_id, code_hash, pkce_challenge, pkce_method,\n                         scopes, expires_at, used_at",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "client_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "user_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 3,
+        "name": "code_hash",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "pkce_challenge",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "pkce_method",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "scopes",
+        "type_info": "TextArray"
+      },
+      {
+        "ordinal": 7,
+        "name": "expires_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 8,
+        "name": "used_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Uuid",
+        "Text",
+        "Text",
+        "TextArray"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "ff78c583af8fee87a5b9bf956472186a58e2badd8fefe45e9b7fc1a707c1281d"
+}

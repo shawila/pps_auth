@@ -1,0 +1,55 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO pps_auth.refresh_tokens (id, user_id, client_id, token_hash, expires_at)\n               VALUES ($1, $2, $3, $4, NOW() + INTERVAL '30 days')\n               RETURNING id, user_id, client_id, token_hash, expires_at, revoked_at",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "user_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "client_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "token_hash",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "expires_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 5,
+        "name": "revoked_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "e2024cb4020129269638f7a3f831bc86a7a175fc81b5b94ea665c23a91d3c798"
+}

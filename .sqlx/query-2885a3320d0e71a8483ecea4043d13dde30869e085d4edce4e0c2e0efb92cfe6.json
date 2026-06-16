@@ -1,0 +1,56 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO pps_auth.credentials (id, user_id, type, provider_id, credential_data)\n               VALUES ($1, $2, $3, $4, $5)\n               ON CONFLICT (type, provider_id)\n               DO UPDATE SET credential_data = EXCLUDED.credential_data\n               RETURNING id, user_id, type, provider_id, credential_data, created_at",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "user_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "type",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "provider_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "credential_data",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 5,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Text",
+        "Text",
+        "Jsonb"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "2885a3320d0e71a8483ecea4043d13dde30869e085d4edce4e0c2e0efb92cfe6"
+}

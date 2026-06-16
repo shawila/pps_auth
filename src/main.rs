@@ -2,6 +2,7 @@ mod config;
 mod crypto;
 mod db;
 mod error;
+mod models;
 
 use axum::{routing::get, Router};
 use std::net::SocketAddr;
