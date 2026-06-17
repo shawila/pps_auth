@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "INSERT INTO pps_auth.credentials (id, user_id, type, provider_id, credential_data)\n               VALUES ($1, $2, $3, $4, $5)\n               ON CONFLICT (type, provider_id)\n               DO UPDATE SET credential_data = EXCLUDED.credential_data\n               RETURNING id, user_id, type, provider_id, credential_data, created_at",
+  "query": "INSERT INTO pps_auth.credentials (id, user_id, type, provider_id, credential_data)\n               VALUES ($1, $2, $3, $4, $5)\n               ON CONFLICT (type, provider_id)\n               DO UPDATE SET credential_data = EXCLUDED.credential_data\n               RETURNING id, user_id, type AS credential_type, provider_id, credential_data, created_at",
   "describe": {
     "columns": [
       {
@@ -15,7 +15,7 @@
       },
       {
         "ordinal": 2,
-        "name": "type",
+        "name": "credential_type",
         "type_info": "Text"
       },
       {
@@ -52,5 +52,5 @@
       false
     ]
   },
-  "hash": "2885a3320d0e71a8483ecea4043d13dde30869e085d4edce4e0c2e0efb92cfe6"
+  "hash": "e436ab9b924aaf28d01d49288b68c1745c9b3522aea13b39a53b069231e7e587"
 }
