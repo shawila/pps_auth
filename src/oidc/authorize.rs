@@ -14,8 +14,8 @@ pub struct AuthorizeParams {
     pub scope: Option<String>,
     pub state: Option<String>,
     pub nonce: Option<String>,
-    pub code_challenge: String,
-    pub code_challenge_method: String,
+    pub code_challenge: Option<String>,
+    pub code_challenge_method: Option<String>,
 }
 
 pub async fn handler(
@@ -23,9 +23,14 @@ pub async fn handler(
     Query(params): Query<AuthorizeParams>,
 ) -> Result<Redirect> {
     if params.response_type != "code" {
-        return Err(AppError::InvalidGrant("unsupported_response_type".to_string()));
+        return Err(AppError::UnsupportedResponseType);
     }
-    if params.code_challenge_method != "S256" {
+
+    let code_challenge = params.code_challenge
+        .ok_or_else(|| AppError::InvalidGrant("code_challenge required".to_string()))?;
+    let code_challenge_method = params.code_challenge_method
+        .ok_or_else(|| AppError::InvalidGrant("code_challenge_method required".to_string()))?;
+    if code_challenge_method != "S256" {
         return Err(AppError::InvalidGrant("only S256 PKCE is supported".to_string()));
     }
 
@@ -45,12 +50,14 @@ pub async fn handler(
         .map(String::from)
         .collect();
 
+    // TODO(Task 14): DashMap sessions have no TTL. A background cleanup task should
+    // remove sessions older than 15 minutes to prevent unbounded memory growth.
     app.auth_sessions.insert(
         session_id.clone(),
         AuthSession {
             client_id: params.client_id,
             redirect_uri: params.redirect_uri,
-            pkce_challenge: params.code_challenge,
+            pkce_challenge: code_challenge,
             scopes,
             nonce: params.nonce,
             state: params.state,

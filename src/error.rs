@@ -13,6 +13,8 @@ pub enum AppError {
     InvalidToken,
     #[error("invalid_client")]
     InvalidClient,
+    #[error("unsupported_response_type")]
+    UnsupportedResponseType,
     #[error("server_error: {0}")]
     Internal(#[from] anyhow::Error),
     #[error("server_error: {0}")]
@@ -27,6 +29,7 @@ impl IntoResponse for AppError {
             AppError::RedirectUriMismatch => (StatusCode::BAD_REQUEST, "redirect_uri_mismatch", "redirect_uri mismatch".to_string()),
             AppError::InvalidToken => (StatusCode::UNAUTHORIZED, "invalid_token", "Invalid or expired token".to_string()),
             AppError::InvalidClient => (StatusCode::UNAUTHORIZED, "invalid_client", "Invalid client credentials".to_string()),
+            AppError::UnsupportedResponseType => (StatusCode::BAD_REQUEST, "unsupported_response_type", "only code response_type is supported".to_string()),
             AppError::Internal(e) => (StatusCode::INTERNAL_SERVER_ERROR, "server_error", e.to_string()),
             AppError::Db(e) => (StatusCode::INTERNAL_SERVER_ERROR, "server_error", e.to_string()),
         };
