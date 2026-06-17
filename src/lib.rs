@@ -7,7 +7,7 @@ pub mod oidc;
 pub mod state;
 pub mod ui;
 
-use axum::{extract::State, routing::get, Json, Router};
+use axum::{extract::State, routing::{get, post}, Json, Router};
 use std::sync::Arc;
 
 pub fn build_router(state: Arc<state::AppState>) -> Router {
@@ -16,6 +16,7 @@ pub fn build_router(state: Arc<state::AppState>) -> Router {
         .route("/.well-known/openid-configuration", get(oidc::discovery::handler))
         .route("/.well-known/jwks.json", get(oidc::jwks::handler))
         .route("/authorize", get(oidc::authorize::handler))
+        .route("/token", post(oidc::token::handler))
         .route("/login", get(ui::login::handler))
         .with_state(state)
 }
