@@ -1,6 +1,7 @@
 use axum::{
     extract::{Query, State},
-    response::{Html, Redirect},
+    http::StatusCode,
+    response::{Html, IntoResponse, Redirect, Response},
 };
 use minijinja::Environment;
 use serde::Deserialize;
@@ -15,22 +16,26 @@ pub struct LoginQuery {
 pub async fn handler(
     State(app): State<Arc<AppState>>,
     Query(params): Query<LoginQuery>,
-) -> Result<Html<String>, Redirect> {
-    let auth_session = app.auth_sessions.get(&params.session);
-    if auth_session.is_none() {
-        return Err(Redirect::to("/"));
-    }
-    let client_id = auth_session.unwrap().client_id.clone();
+) -> Response {
+    let Some(session) = app.auth_sessions.get(&params.session) else {
+        return Redirect::to("/").into_response();
+    };
+    let client_id = session.client_id.clone();
+    drop(session);
 
     let mut env = Environment::new();
-    env.add_template("login.html", include_str!("templates/login.html"))
-        .unwrap();
-    let tmpl = env.get_template("login.html").unwrap();
-    let html = tmpl.render(minijinja::context! {
+    if env.add_template("login.html", include_str!("templates/login.html")).is_err() {
+        return (StatusCode::INTERNAL_SERVER_ERROR, Html("Template error".to_string())).into_response();
+    }
+    let tmpl = match env.get_template("login.html") {
+        Ok(t) => t,
+        Err(_) => return (StatusCode::INTERNAL_SERVER_ERROR, Html("Template not found".to_string())).into_response(),
+    };
+    match tmpl.render(minijinja::context! {
         session_id => params.session,
         client_name => client_id,
-    })
-    .unwrap();
-
-    Ok(Html(html))
+    }) {
+        Ok(html) => Html(html).into_response(),
+        Err(_) => (StatusCode::INTERNAL_SERVER_ERROR, Html("Render error".to_string())).into_response(),
+    }
 }
