@@ -2,6 +2,7 @@ pub mod config;
 pub mod crypto;
 pub mod db;
 pub mod error;
+pub mod middleware;
 pub mod models;
 pub mod oidc;
 pub mod state;
@@ -17,6 +18,8 @@ pub fn build_router(state: Arc<state::AppState>) -> Router {
         .route("/.well-known/jwks.json", get(oidc::jwks::handler))
         .route("/authorize", get(oidc::authorize::handler))
         .route("/token", post(oidc::token::handler))
+        .route("/userinfo", get(oidc::userinfo::handler))
+        .route("/revoke", post(oidc::revoke::handler))
         .route("/login", get(ui::login::handler))
         .with_state(state)
 }

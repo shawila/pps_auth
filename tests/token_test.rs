@@ -119,3 +119,35 @@ async fn refresh_token_rotation_issues_new_token() {
         .await;
     assert_eq!(reuse_res.status_code().as_u16(), 400);
 }
+
+#[tokio::test]
+async fn userinfo_returns_claims_for_valid_token() {
+    let app = common::test_app().await;
+    let (client_id, secret) = common::seed_client_with_secret(&app.pool, "info_app1", "http://info1.example/cb").await;
+    let user_id = common::seed_user(&app.pool, "info@example.com").await;
+    let (code, _, verifier) = common::create_auth_code(&app.pool, &client_id, user_id, "http://info1.example/cb").await;
+
+    let tokens: serde_json::Value = app.post("/token")
+        .form(&[
+            ("grant_type", "authorization_code"),
+            ("client_id", client_id.as_str()),
+            ("client_secret", secret.as_str()),
+            ("code", code.as_str()),
+            ("redirect_uri", "http://info1.example/cb"),
+            ("code_verifier", verifier.as_str()),
+        ])
+        .await.json();
+
+    let access_token = tokens["access_token"].as_str().unwrap().to_string();
+    let res = app.get("/userinfo")
+        .add_header(
+            axum::http::header::AUTHORIZATION,
+            format!("Bearer {access_token}"),
+        )
+        .await;
+    assert_eq!(res.status_code().as_u16(), 200);
+    let body: serde_json::Value = res.json();
+    assert_eq!(body["email"], "info@example.com");
+    assert!(body["sub"].is_string());
+    assert!(body["roles"].is_array());
+}
