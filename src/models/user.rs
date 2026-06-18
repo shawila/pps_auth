@@ -21,6 +21,16 @@ impl User {
         .await
     }
 
+    pub async fn find_by_id(pool: &PgPool, id: Uuid) -> sqlx::Result<Option<Self>> {
+        sqlx::query_as!(
+            Self,
+            "SELECT id, email, name, created_at FROM pps_auth.users WHERE id = $1",
+            id
+        )
+        .fetch_optional(pool)
+        .await
+    }
+
     pub async fn upsert(pool: &PgPool, email: &str, name: Option<&str>) -> sqlx::Result<Self> {
         sqlx::query_as!(
             Self,

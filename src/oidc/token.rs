@@ -113,13 +113,9 @@ async fn issue_tokens(
     client_id: &str,
     nonce: Option<String>,
 ) -> Result<Json<TokenResponse>> {
-    let user = sqlx::query_as!(
-        User,
-        "SELECT id, email, name, created_at FROM pps_auth.users WHERE id = $1",
-        user_id
-    )
-    .fetch_one(&app.pool)
-    .await?;
+    let user = User::find_by_id(&app.pool, user_id)
+        .await?
+        .ok_or_else(|| AppError::InvalidGrant("user not found".to_string()))?;
 
     let roles = Role::for_user_and_client(&app.pool, user_id, client_id).await?;
 
