@@ -64,7 +64,6 @@ jobs:
           PPS_AUTH_BASE_URL: http://localhost:4000
           GOOGLE_CLIENT_ID: ci-client-id
           GOOGLE_CLIENT_SECRET: ci-client-secret
-          SQLX_OFFLINE: true
         run: cargo test
 
   deploy:
