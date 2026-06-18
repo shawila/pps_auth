@@ -66,7 +66,7 @@ pub async fn callback(
 
     // Exchange Google auth code for access token using reqwest directly
     // to avoid oauth2 crate http client version compatibility issues.
-    let token_resp = reqwest::Client::new()
+    let token_resp = app.http_client
         .post("https://oauth2.googleapis.com/token")
         .form(&[
             ("code", q.code.as_str()),
@@ -78,6 +78,8 @@ pub async fn callback(
         .send()
         .await
         .map_err(|e| AppError::Internal(anyhow::anyhow!("Google token exchange failed: {e}")))?
+        .error_for_status()
+        .map_err(|e| AppError::Internal(anyhow::anyhow!("Google token endpoint error: {e}")))?
         .json::<Value>()
         .await
         .map_err(|e| AppError::Internal(anyhow::anyhow!("Google token parse failed: {e}")))?;
@@ -87,12 +89,14 @@ pub async fn callback(
         .ok_or_else(|| AppError::Internal(anyhow::anyhow!("missing access_token in Google response")))?;
 
     // Fetch Google userinfo
-    let userinfo: Value = reqwest::Client::new()
+    let userinfo: Value = app.http_client
         .get("https://www.googleapis.com/oauth2/v3/userinfo")
         .bearer_auth(access_token)
         .send()
         .await
         .map_err(|e| AppError::Internal(anyhow::anyhow!("Userinfo fetch failed: {e}")))?
+        .error_for_status()
+        .map_err(|e| AppError::Internal(anyhow::anyhow!("Userinfo endpoint error: {e}")))?
         .json()
         .await
         .map_err(|e| AppError::Internal(anyhow::anyhow!("Userinfo parse failed: {e}")))?;

@@ -28,6 +28,7 @@ pub struct AppState {
     pub base_url: String,
     pub google_client: BasicClient,
     pub google_client_secret: String,
+    pub http_client: reqwest::Client,
     pub webauthn: Arc<Webauthn>,
     /// auth_session_id → AuthSession (created at /authorize, consumed after login)
     pub auth_sessions: Arc<DashMap<String, AuthSession>>,
@@ -73,6 +74,7 @@ impl AppState {
             base_url: config.base_url.clone(),
             google_client,
             google_client_secret: config.google_client_secret.clone(),
+            http_client: reqwest::Client::new(),
             webauthn: Arc::new(webauthn),
             auth_sessions: Arc::new(DashMap::new()),
             google_states: Arc::new(DashMap::new()),
