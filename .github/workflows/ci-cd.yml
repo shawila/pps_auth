@@ -44,6 +44,9 @@ jobs:
           pip install cryptography --quiet
           python3 scripts/gen_jwks.py public.pem jwks.json
 
+      - name: Install sqlx-cli
+        run: cargo install sqlx-cli --no-default-features --features postgres --locked
+
       - name: Check sqlx query cache is up to date
         env:
           DATABASE_URL: postgres://pps_auth:pps_auth@localhost:5432/pps_auth
