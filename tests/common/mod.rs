@@ -24,6 +24,7 @@ pub async fn test_app() -> TestApp {
         .or_else(|_| std::env::var("DATABASE_URL"))
         .expect("DATABASE_URL or TEST_DATABASE_URL must be set");
     let pool = pps_auth::db::connect(&db_url).await.unwrap();
+    sqlx::migrate!("./migrations").run(&pool).await.unwrap();
 
     sqlx::query!("TRUNCATE pps_auth.authorization_codes, pps_auth.refresh_tokens, pps_auth.credentials, pps_auth.roles, pps_auth.users, pps_auth.oauth_clients CASCADE")
         .execute(&pool)

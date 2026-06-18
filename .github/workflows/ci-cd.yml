@@ -44,11 +44,6 @@ jobs:
           pip install cryptography --quiet
           python3 scripts/gen_jwks.py public.pem jwks.json
 
-      - name: Run migrations
-        env:
-          DATABASE_URL: postgres://pps_auth:pps_auth@localhost:5432/pps_auth
-        run: cargo sqlx migrate run
-
       - name: Run tests
         env:
           DATABASE_URL: postgres://pps_auth:pps_auth@localhost:5432/pps_auth
