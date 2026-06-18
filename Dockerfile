@@ -1,5 +1,6 @@
 FROM rust:1.78-slim AS builder
 WORKDIR /app
+ENV SQLX_OFFLINE=true
 RUN apt-get update && apt-get install -y pkg-config libssl-dev && rm -rf /var/lib/apt/lists/*
 COPY Cargo.toml Cargo.lock ./
 # Pre-cache dependencies with stub binaries
