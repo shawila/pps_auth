@@ -24,6 +24,10 @@ pub fn build_router(state: Arc<state::AppState>) -> Router {
         .route("/login", get(ui::login::handler))
         .route("/auth/google", get(auth::google::start))
         .route("/auth/google/callback", get(auth::google::callback))
+        .route("/auth/passkey/register/start", post(auth::passkey::register_start))
+        .route("/auth/passkey/register/finish", post(auth::passkey::register_finish))
+        .route("/auth/passkey/authenticate/start", post(auth::passkey::auth_start))
+        .route("/auth/passkey/authenticate/finish", post(auth::passkey::auth_finish))
         .with_state(state)
 }
 
