@@ -1,3 +1,4 @@
+pub mod auth;
 pub mod config;
 pub mod crypto;
 pub mod db;
@@ -21,6 +22,8 @@ pub fn build_router(state: Arc<state::AppState>) -> Router {
         .route("/userinfo", get(oidc::userinfo::handler))
         .route("/revoke", post(oidc::revoke::handler))
         .route("/login", get(ui::login::handler))
+        .route("/auth/google", get(auth::google::start))
+        .route("/auth/google/callback", get(auth::google::callback))
         .with_state(state)
 }
 

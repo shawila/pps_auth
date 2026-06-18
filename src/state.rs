@@ -27,6 +27,7 @@ pub struct AppState {
     pub jwks: Arc<Value>,
     pub base_url: String,
     pub google_client: BasicClient,
+    pub google_client_secret: String,
     pub webauthn: Arc<Webauthn>,
     /// auth_session_id → AuthSession (created at /authorize, consumed after login)
     pub auth_sessions: Arc<DashMap<String, AuthSession>>,
@@ -71,6 +72,7 @@ impl AppState {
             jwks,
             base_url: config.base_url.clone(),
             google_client,
+            google_client_secret: config.google_client_secret.clone(),
             webauthn: Arc::new(webauthn),
             auth_sessions: Arc::new(DashMap::new()),
             google_states: Arc::new(DashMap::new()),
