@@ -45,7 +45,7 @@ jobs:
           python3 scripts/gen_jwks.py public.pem jwks.json
 
       - name: Install sqlx-cli
-        run: cargo install sqlx-cli --version 0.8.6 --no-default-features --features postgres --locked
+        run: which sqlx || cargo install sqlx-cli --version 0.8.6 --no-default-features --features postgres --locked
 
       - name: Run migrations
         env:
