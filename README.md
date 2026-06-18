@@ -92,6 +92,39 @@ cargo fmt            # Format
 
 Tests require a running PostgreSQL instance. Set `TEST_DATABASE_URL` in your environment.
 
+## Deployment
+
+Live at **https://auth.ppsoftsolutions.com**
+
+Deployments are automatic on every push to `main`:
+
+1. CI runs tests against a PostgreSQL service container
+2. Docker image is built and pushed to [GitHub Container Registry](https://ghcr.io/shawila/pps_auth)
+3. Server pulls the new image and restarts via `docker compose`
+
+Infrastructure (docker-compose, Caddyfile, environment): **[shawila/infra](https://github.com/shawila/infra)**
+
+### First-time server setup
+
+```bash
+# Generate RS256 keypair on the server
+mkdir -p /opt/infra/keys
+openssl genrsa -out /opt/infra/keys/private.pem 2048
+openssl rsa -in /opt/infra/keys/private.pem -pubout -out /opt/infra/keys/public.pem
+python3 scripts/gen_jwks.py /opt/infra/keys/public.pem /opt/infra/keys/jwks.json
+
+# Seed OAuth clients for sister apps (run once after first deploy)
+docker compose -f /opt/infra/docker-compose.yml exec pps_auth ./seed
+```
+
+Required secrets in GitHub Actions (`Settings → Secrets`):
+
+| Secret | Description |
+|---|---|
+| `DEPLOY_HOST` | Server IP or hostname |
+| `DEPLOY_USER` | SSH user |
+| `DEPLOY_SSH_KEY` | Private SSH key |
+
 ## Design
 
 Full design spec: [`docs/superpowers/specs/2026-06-16-auth-microservice-design.md`](docs/superpowers/specs/2026-06-16-auth-microservice-design.md)
