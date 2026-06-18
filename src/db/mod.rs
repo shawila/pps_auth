@@ -2,10 +2,8 @@ use sqlx::postgres::PgPoolOptions;
 use sqlx::PgPool;
 
 pub async fn connect(database_url: &str) -> anyhow::Result<PgPool> {
-    let pool = PgPoolOptions::new()
+    Ok(PgPoolOptions::new()
         .max_connections(10)
         .connect(database_url)
-        .await?;
-    sqlx::migrate!("./migrations").run(&pool).await?;
-    Ok(pool)
+        .await?)
 }
