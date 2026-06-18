@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE pps_auth.credentials SET credential_data = $1 WHERE type = 'passkey' AND provider_id = $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Jsonb",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "6da2a5838805602bdf31f1ec09bde1ab8edaa15271e842191cbdcd0298bd26b4"
+}

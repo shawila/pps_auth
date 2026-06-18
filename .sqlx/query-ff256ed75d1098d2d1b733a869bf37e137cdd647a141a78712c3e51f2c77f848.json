@@ -1,0 +1,20 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT credential_data FROM pps_auth.credentials WHERE type = 'passkey'",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "credential_data",
+        "type_info": "Jsonb"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "ff256ed75d1098d2d1b733a869bf37e137cdd647a141a78712c3e51f2c77f848"
+}
