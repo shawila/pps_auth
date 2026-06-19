@@ -111,7 +111,6 @@ pub async fn callback(
         .to_string();
     let name = userinfo["name"].as_str().map(String::from);
 
-    // ── was: let user = User::upsert(&app.pool, &email, name.as_deref()).await?;
     let client = crate::models::oauth_client::OauthClient::find(&app.pool, &auth_session.client_id)
         .await?
         .ok_or(AppError::UnauthorizedClient)?;
