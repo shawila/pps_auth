@@ -9,6 +9,7 @@ pub struct OauthClient {
     pub client_secret_hash: String,
     pub redirect_uris: Vec<String>,
     pub name: Option<String>,
+    pub allow_signups: bool,
     pub created_at: OffsetDateTime,
 }
 
@@ -16,7 +17,7 @@ impl OauthClient {
     pub async fn find(pool: &PgPool, client_id: &str) -> sqlx::Result<Option<Self>> {
         sqlx::query_as!(
             Self,
-            "SELECT id, client_id, client_secret_hash, redirect_uris, name, created_at
+            "SELECT id, client_id, client_secret_hash, redirect_uris, name, allow_signups, created_at
              FROM pps_auth.oauth_clients WHERE client_id = $1",
             client_id
         )

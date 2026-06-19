@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT id, client_id, client_secret_hash, redirect_uris, name, created_at\n             FROM pps_auth.oauth_clients WHERE client_id = $1",
+  "query": "SELECT id, client_id, client_secret_hash, redirect_uris, name, allow_signups, created_at\n             FROM pps_auth.oauth_clients WHERE client_id = $1",
   "describe": {
     "columns": [
       {
@@ -30,6 +30,11 @@
       },
       {
         "ordinal": 5,
+        "name": "allow_signups",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 6,
         "name": "created_at",
         "type_info": "Timestamptz"
       }
@@ -45,8 +50,9 @@
       false,
       false,
       true,
+      false,
       false
     ]
   },
-  "hash": "6df1908d49ac1b09aea3c258b84fd4a4f82c6c5b40b8e7bc25049c0c71a1f61f"
+  "hash": "5153cfb377e57d8107e0834e970a136d315fb0a20664e0475729dac5e4f0c59d"
 }
