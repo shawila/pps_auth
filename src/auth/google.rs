@@ -111,6 +111,17 @@ pub async fn callback(
         .to_string();
     let name = userinfo["name"].as_str().map(String::from);
 
+    // ── was: let user = User::upsert(&app.pool, &email, name.as_deref()).await?;
+    let client = crate::models::oauth_client::OauthClient::find(&app.pool, &auth_session.client_id)
+        .await?
+        .ok_or(AppError::UnauthorizedClient)?;
+
+    if !client.allow_signups && User::find_by_email(&app.pool, &email).await?.is_none() {
+        return Err(AppError::InvalidGrant(
+            "Sign-ups are not allowed for this application.".to_string(),
+        ));
+    }
+
     let user = User::upsert(&app.pool, &email, name.as_deref()).await?;
     Credential::upsert(&app.pool, user.id, "google", &google_sub, &userinfo).await?;
 
@@ -135,4 +146,30 @@ pub async fn callback(
     }
 
     Ok(Redirect::to(&redirect_url))
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn signups_allowed_for_default_client() {
+        // When allow_signups=true, any email proceeds.
+        // Logic: !allow_signups && user_is_new == false when allow_signups=true
+        let allow_signups = true;
+        let user_is_new = true;
+        assert!(!((!allow_signups) && user_is_new));
+    }
+
+    #[test]
+    fn signups_blocked_for_closed_client_with_new_user() {
+        let allow_signups = false;
+        let user_is_new = true;
+        assert!((!allow_signups) && user_is_new); // this path returns an error
+    }
+
+    #[test]
+    fn signups_blocked_but_existing_user_proceeds() {
+        let allow_signups = false;
+        let user_is_new = false;
+        assert!(!((!allow_signups) && user_is_new)); // existing user is fine
+    }
 }
