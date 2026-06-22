@@ -58,18 +58,27 @@ pub async fn register_finish(
         .finish_passkey_registration(&req.credential, &reg_state)
         .map_err(|e| AppError::InvalidGrant(format!("WebAuthn reg finish: {e}")))?;
 
-    // session_id is the auth_session_id from the /login page
-    if let Some(session) = app.auth_sessions.get(&req.session_id) {
+    // session_id is the auth_session_id from the /login page — must be present to proceed
+    let _client_id = if let Some(session) = app.auth_sessions.get(&req.session_id) {
         let client = crate::models::oauth_client::OauthClient::find(&app.pool, &session.client_id)
             .await?
             .ok_or(AppError::UnauthorizedClient)?;
 
-        if !client.allow_signups && crate::models::user::User::find_by_email(&app.pool, &req.email).await?.is_none() {
+        if !client.allow_signups
+            && crate::models::user::User::find_by_email(&app.pool, &req.email)
+                .await?
+                .is_none()
+        {
             return Err(AppError::InvalidGrant(
                 "Sign-ups are not allowed for this application.".to_string(),
             ));
         }
-    }
+        session.client_id.clone()
+    } else {
+        return Err(AppError::InvalidGrant(
+            "Unknown session — cannot verify registration eligibility.".to_string(),
+        ));
+    };
 
     let user = User::upsert(&app.pool, &req.email, None).await?;
     let cred_data = serde_json::to_value(&passkey)
