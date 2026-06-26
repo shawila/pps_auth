@@ -61,10 +61,7 @@ cp .env.example .env
 openssl genrsa -out private.pem 2048
 openssl rsa -in private.pem -pubout -out public.pem
 
-# Run database migrations
-cargo run --bin migrate
-
-# Start the server
+# Start the server (migrations run automatically on startup)
 cargo run
 ```
 
@@ -83,11 +80,12 @@ cargo run
 ## Development
 
 ```bash
-cargo build          # Build
-cargo run            # Start server on localhost:4000
-cargo test           # Run test suite
-cargo clippy         # Lint
-cargo fmt            # Format
+cargo build              # Build
+cargo run                # Start server on localhost:4000
+cargo run --bin seed     # Seed OAuth clients (run once after first setup)
+cargo test               # Run test suite
+cargo clippy             # Lint
+cargo fmt                # Format
 ```
 
 Tests require a running PostgreSQL instance. Set `TEST_DATABASE_URL` in your environment.
