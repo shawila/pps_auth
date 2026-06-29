@@ -176,6 +176,7 @@ pub async fn auth_finish(
         &code_hash,
         &auth_session.pkce_challenge,
         &auth_session.scopes,
+        auth_session.nonce.as_deref(),
     )
     .await?;
 

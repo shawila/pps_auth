@@ -11,6 +11,7 @@ pub struct AuthorizationCode {
     pub pkce_challenge: String,
     pub pkce_method: String,
     pub scopes: Vec<String>,
+    pub nonce: Option<String>,
     pub expires_at: OffsetDateTime,
     pub used_at: Option<OffsetDateTime>,
 }
@@ -24,20 +25,22 @@ impl AuthorizationCode {
         code_hash: &str,
         pkce_challenge: &str,
         scopes: &[String],
+        nonce: Option<&str>,
     ) -> sqlx::Result<Self> {
         sqlx::query_as!(
             Self,
             r#"INSERT INTO pps_auth.authorization_codes
-               (id, client_id, user_id, code_hash, pkce_challenge, pkce_method, scopes, expires_at)
-               VALUES ($1, $2, $3, $4, $5, 'S256', $6, NOW() + INTERVAL '5 minutes')
+               (id, client_id, user_id, code_hash, pkce_challenge, pkce_method, scopes, nonce, expires_at)
+               VALUES ($1, $2, $3, $4, $5, 'S256', $6, $7, NOW() + INTERVAL '5 minutes')
                RETURNING id, client_id, user_id, code_hash, pkce_challenge, pkce_method,
-                         scopes, expires_at, used_at"#,
+                         scopes, nonce, expires_at, used_at"#,
             Uuid::new_v4(),
             client_id,
             user_id,
             code_hash,
             pkce_challenge,
             scopes as &[String],
+            nonce,
         )
         .fetch_one(pool)
         .await
@@ -51,7 +54,7 @@ impl AuthorizationCode {
                SET used_at = NOW()
                WHERE code_hash = $1 AND used_at IS NULL AND expires_at > NOW()
                RETURNING id, client_id, user_id, code_hash, pkce_challenge, pkce_method,
-                         scopes, expires_at, used_at"#,
+                         scopes, nonce, expires_at, used_at"#,
             code_hash
         )
         .fetch_optional(pool)

@@ -33,7 +33,7 @@ pub async fn handler(State(state): State<Arc<AppState>>) -> Json<DiscoveryDocume
         id_token_signing_alg_values_supported: vec!["RS256".to_string()],
         code_challenge_methods_supported: vec!["S256".to_string()],
         grant_types_supported: vec!["authorization_code".to_string(), "refresh_token".to_string()],
-        token_endpoint_auth_methods_supported: vec!["client_secret_basic".to_string()],
+        token_endpoint_auth_methods_supported: vec!["client_secret_post".to_string()],
         scopes_supported: vec!["openid".to_string(), "email".to_string(), "profile".to_string()],
         claims_supported: vec![
             "sub".to_string(), "iss".to_string(), "email".to_string(),
@@ -57,7 +57,7 @@ mod tests {
             id_token_signing_alg_values_supported: vec!["RS256".to_string()],
             code_challenge_methods_supported: vec!["S256".to_string()],
             grant_types_supported: vec!["authorization_code".to_string(), "refresh_token".to_string()],
-            token_endpoint_auth_methods_supported: vec!["client_secret_basic".to_string()],
+            token_endpoint_auth_methods_supported: vec!["client_secret_post".to_string()],
             scopes_supported: vec!["openid".to_string(), "email".to_string(), "profile".to_string()],
             claims_supported: vec!["sub".to_string(), "iss".to_string(), "email".to_string()],
         };
@@ -80,7 +80,7 @@ mod tests {
             id_token_signing_alg_values_supported: vec!["RS256".to_string()],
             code_challenge_methods_supported: vec!["S256".to_string()],
             grant_types_supported: vec!["authorization_code".to_string(), "refresh_token".to_string()],
-            token_endpoint_auth_methods_supported: vec!["client_secret_basic".to_string()],
+            token_endpoint_auth_methods_supported: vec!["client_secret_post".to_string()],
             scopes_supported: vec!["openid".to_string(), "email".to_string(), "profile".to_string()],
             claims_supported: vec!["sub".to_string(), "iss".to_string(), "email".to_string()],
         };

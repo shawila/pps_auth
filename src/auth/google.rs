@@ -2,7 +2,7 @@ use axum::{
     extract::{Query, State},
     response::Redirect,
 };
-use oauth2::{CsrfToken, PkceCodeChallenge, Scope};
+use oauth2::{CsrfToken, Scope};
 use serde::Deserialize;
 use serde_json::Value;
 use std::sync::Arc;
@@ -26,15 +26,12 @@ pub async fn start(
         return Err(AppError::InvalidGrant("auth session not found".to_string()));
     }
 
-    let (pkce_challenge, _pkce_verifier) = PkceCodeChallenge::new_random_sha256();
-
     let (auth_url, csrf_token) = app
         .google_client
         .authorize_url(CsrfToken::new_random)
         .add_scope(Scope::new("openid".to_string()))
         .add_scope(Scope::new("email".to_string()))
         .add_scope(Scope::new("profile".to_string()))
-        .set_pkce_challenge(pkce_challenge)
         .url();
 
     app.google_states.insert(csrf_token.secret().clone(), q.session);
@@ -133,6 +130,7 @@ pub async fn callback(
         &code_hash,
         &auth_session.pkce_challenge,
         &auth_session.scopes,
+        auth_session.nonce.as_deref(),
     )
     .await?;
 

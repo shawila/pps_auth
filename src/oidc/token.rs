@@ -81,10 +81,7 @@ async fn code_exchange(
         return Err(AppError::InvalidGrant("invalid code_verifier".to_string()));
     }
 
-    // Nonce is optional; the current schema does not persist it on the auth code.
-    let nonce: Option<String> = None;
-
-    issue_tokens(app, auth_code.user_id, client_id, nonce).await
+    issue_tokens(app, auth_code.user_id, client_id, auth_code.nonce).await
 }
 
 async fn refresh_grant(
