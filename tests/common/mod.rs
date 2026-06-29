@@ -76,7 +76,7 @@ pub async fn create_auth_code(
     let code_plain = pps_auth::crypto::generate_token();
     let code_hash = pps_auth::crypto::hash_token(&code_plain);
     pps_auth::models::authorization_code::AuthorizationCode::create(
-        pool, client_id, user_id, &code_hash, &challenge, &[redirect_uri.to_string()]
+        pool, client_id, user_id, &code_hash, &challenge, &[redirect_uri.to_string()], None
     ).await.unwrap();
     (code_plain, challenge, verifier.to_string())
 }
