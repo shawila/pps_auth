@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO pps_auth.users (id, email, name)\n               VALUES (gen_random_uuid(), $1, $2)\n               ON CONFLICT (email) DO NOTHING",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "2ff1a595b7b38df230b3e915a942a276b5739f8f17ae8102605c9fa25cc4bca8"
+}

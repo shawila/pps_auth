@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO pps_auth.oauth_clients\n                       (id, client_id, client_secret_hash, redirect_uris, allow_signups)\n                   VALUES (gen_random_uuid(), $1, $2, $3, $4)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "TextArray",
+        "Bool"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "4b2b999eba646bbf7901712400580ececbf449e1ff0cde43a04048ff03e481ef"
+}

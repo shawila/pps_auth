@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE pps_auth.oauth_clients\n                   SET redirect_uris = $2, allow_signups = $3\n                   WHERE client_id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "TextArray",
+        "Bool"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "de3be9612e31f16b8733c42311c2b40aa00a82807f52c33038241f3242ab1aae"
+}
