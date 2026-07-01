@@ -1,4 +1,5 @@
 use pps_auth::crypto;
+use uuid::Uuid;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -17,11 +18,6 @@ async fn main() -> anyhow::Result<()> {
             "trading_bot",
             vec!["https://trading.ppsoftsolutions.com/auth/callback"],
             false, // no self-sign-up; only pre-seeded users may log in
-        ),
-        (
-            "scheduler_python",
-            vec!["http://localhost:5000/auth/callback"],
-            true,
         ),
     ];
 
@@ -67,21 +63,23 @@ async fn main() -> anyhow::Result<()> {
     }
 
     // ── Pre-seeded users ─────────────────────────────────────────────────────
-    let users: Vec<(&str, Option<&str>)> = vec![
-        ("salah.hawila@gmail.com", Some("Salah Hawila")),
+    let users: Vec<(&str, &str, Option<&str>)> = vec![
+        ("27c5efca-908e-45eb-b1b5-03949a5d7f48", "salah.hawila@gmail.com", Some("Salah Hawila")),
     ];
 
-    for (email, name) in users {
+    for (id, email, name) in users {
+        let id = Uuid::parse_str(id).unwrap();
         sqlx::query!(
             r#"INSERT INTO pps_auth.users (id, email, name)
-               VALUES (gen_random_uuid(), $1, $2)
+               VALUES ($1, $2, $3)
                ON CONFLICT (email) DO NOTHING"#,
+            id,
             email,
             name,
         )
         .execute(&pool)
         .await?;
-        println!("user seeded: {email}");
+        println!("user seeded: {email} (id={id})");
     }
 
     // ── Roles ────────────────────────────────────────────────────────────────
