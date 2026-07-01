@@ -119,9 +119,9 @@ Required secrets in GitHub Actions (`Settings → Secrets`):
 
 | Secret | Description |
 |---|---|
-| `DEPLOY_HOST` | Server IP or hostname |
-| `DEPLOY_USER` | SSH user |
-| `DEPLOY_SSH_KEY` | Private SSH key |
+| `DEPLOY_HOST` | `159.69.119.167` |
+| `DEPLOY_USER` | `root` |
+| `DEPLOY_SSH_KEY` | contents of `~/.ssh/github_deploy` (passphrase-less key, must be authorized on the server) |
 
 ## Design
 
