@@ -8,7 +8,6 @@ Centralized OIDC Authorization Server for the pps project. Issues RS256-signed J
 |---|---|---|
 | `portfolio_chatbot` | Rails 7.2 | `omniauth-openid-connect` |
 | `trading_bot` | Rust (Axum) | Bearer JWT, JWKS validation |
-| `scheduler-python` | Flask | `authlib` OIDC client |
 
 ## Auth Methods
 

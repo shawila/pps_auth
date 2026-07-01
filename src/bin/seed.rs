@@ -11,12 +11,18 @@ async fn main() -> anyhow::Result<()> {
     let clients: Vec<(&str, Vec<&str>, bool)> = vec![
         (
             "portfolio_chatbot",
-            vec!["http://localhost:3000/users/auth/pps_auth/callback"],
+            vec![
+                "http://localhost:3002/users/auth/pps_auth/callback",
+                "https://chat.ppsoftsolutions.com/users/auth/pps_auth/callback",
+            ],
             true,
         ),
         (
             "trading_bot",
-            vec!["https://trading.ppsoftsolutions.com/auth/callback"],
+            vec![
+                "http://localhost:3003/auth/callback",
+                "https://trading.ppsoftsolutions.com/auth/callback",
+            ],
             false, // no self-sign-up; only pre-seeded users may log in
         ),
     ];

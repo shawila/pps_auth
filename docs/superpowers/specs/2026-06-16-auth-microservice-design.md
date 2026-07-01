@@ -12,7 +12,6 @@
 **Sister apps:**
 - `portfolio_chatbot` — Rails 7.2, PostgreSQL, Devise (roles: `manager`, `superuser`)
 - `trading_bot` — Rust (Axum), currently x-api-key auth (role: `superuser`)
-- `scheduler-python` — Flask, Google OAuth per-user (role: `superuser`)
 
 ---
 
@@ -234,26 +233,12 @@ end
 
 Remove `x-api-key` middleware. Add JWT validation layer: fetch JWKS at startup, cache public key, validate `Authorization: Bearer <token>` on all `/api/v1/*` routes. Check `superuser` role claim.
 
-### scheduler-python (Flask)
-
-Add `authlib`. Register `pps_auth` via discovery URL. Protect routes with a `@require_auth` decorator.
-
-```python
-oauth.register(
-    name="pps_auth",
-    server_metadata_url=f"{PPS_AUTH_URL}/.well-known/openid-configuration",
-    client_id="scheduler_python",
-    client_secret=os.environ["PPS_AUTH_CLIENT_SECRET"],
-)
-```
-
 ### Registered Clients (seeded at startup)
 
 | client_id | redirect_uri | roles checked |
 |---|---|---|
-| `portfolio_chatbot` | `https://chatbot.domain/auth/callback` | `manager`, `superuser` |
-| `trading_bot` | — (API only, no redirect) | `superuser` |
-| `scheduler_python` | `https://scheduler.domain/auth/callback` | `superuser` |
+| `portfolio_chatbot` | `https://chat.ppsoftsolutions.com/users/auth/pps_auth/callback` | `manager`, `superuser` |
+| `trading_bot` | `https://trading.ppsoftsolutions.com/auth/callback` | `superuser` |
 
 ---
 

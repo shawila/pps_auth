@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Build a standalone OIDC Authorization Server in Rust (Axum) that issues RS256 JWTs consumed by portfolio_chatbot, trading_bot, and scheduler-python via Authorization Code Flow + PKCE.
+**Goal:** Build a standalone OIDC Authorization Server in Rust (Axum) that issues RS256 JWTs consumed by portfolio_chatbot and trading_bot via Authorization Code Flow + PKCE.
 
 **Architecture:** Single Axum binary. PostgreSQL (separate `pps_auth` schema, shared instance with portfolio_chatbot). Private key on disk signs JWTs; public key served at `/.well-known/jwks.json`. In-memory DashMaps hold WebAuthn and Google OAuth in-flight session state.
 
@@ -2519,9 +2519,8 @@ async fn main() -> anyhow::Result<()> {
     let pool = pps_auth::db::connect(&db_url).await?;
 
     let clients = vec![
-        ("portfolio_chatbot",  vec!["http://localhost:3000/auth/pps_auth/callback"]),
-        ("trading_bot",        vec![]),
-        ("scheduler_python",   vec!["http://localhost:5000/auth/callback"]),
+        ("portfolio_chatbot",  vec!["http://localhost:3002/users/auth/pps_auth/callback", "https://chat.ppsoftsolutions.com/users/auth/pps_auth/callback"]),
+        ("trading_bot",        vec!["http://localhost:3003/auth/callback", "https://trading.ppsoftsolutions.com/auth/callback"]),
     ];
 
     for (client_id, redirect_uris) in clients {
