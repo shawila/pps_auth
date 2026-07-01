@@ -3,7 +3,7 @@ use pps_auth::crypto;
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     dotenvy::dotenv().ok();
-    let db_url = std::env::var("DATABASE_URL")?;
+    let db_url = pps_auth::config::resolve_database_url()?;
     let pool = pps_auth::db::connect(&db_url).await?;
 
     // ── OAuth clients ────────────────────────────────────────────────────────
