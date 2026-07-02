@@ -52,6 +52,15 @@ impl Config {
             .unwrap_or_else(|_| "private.pem".to_string());
         let public_path = env::var("JWT_PUBLIC_KEY_PATH")
             .unwrap_or_else(|_| "public.pem".to_string());
+        let base_url = env::var("PPS_AUTH_BASE_URL")
+            .unwrap_or_else(|_| "http://localhost:4000".to_string());
+        let base_url_parsed = Url::parse(&base_url)
+            .map_err(|_| anyhow::anyhow!("PPS_AUTH_BASE_URL is not a valid URL: {base_url}"))?;
+        let webauthn_rp_id = base_url_parsed
+            .host_str()
+            .ok_or_else(|| anyhow::anyhow!("PPS_AUTH_BASE_URL has no host"))?
+            .to_string();
+        let webauthn_rp_origin = base_url_parsed.origin().ascii_serialization();
         Ok(Self {
             database_url: resolve_database_url()?,
             jwt_private_key: fs::read_to_string(&private_path)
@@ -63,16 +72,13 @@ impl Config {
                 .map_err(|_| anyhow::anyhow!("GOOGLE_CLIENT_ID required"))?,
             google_client_secret: env::var("GOOGLE_CLIENT_SECRET")
                 .map_err(|_| anyhow::anyhow!("GOOGLE_CLIENT_SECRET required"))?,
-            base_url: env::var("PPS_AUTH_BASE_URL")
-                .unwrap_or_else(|_| "http://localhost:4000".to_string()),
-            port: env::var("SERVER_PORT")
+            base_url,
+            port: env::var("PORT")
                 .unwrap_or_else(|_| "4000".to_string())
                 .parse()
-                .map_err(|_| anyhow::anyhow!("SERVER_PORT must be a number"))?,
-            webauthn_rp_id: env::var("WEBAUTHN_RP_ID")
-                .unwrap_or_else(|_| "localhost".to_string()),
-            webauthn_rp_origin: env::var("WEBAUTHN_RP_ORIGIN")
-                .unwrap_or_else(|_| "http://localhost:4000".to_string()),
+                .map_err(|_| anyhow::anyhow!("PORT must be a number"))?,
+            webauthn_rp_id,
+            webauthn_rp_origin,
         })
     }
 }

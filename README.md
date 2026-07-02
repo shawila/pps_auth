@@ -79,7 +79,7 @@ cargo run
 | `GOOGLE_CLIENT_ID` | Google OAuth client ID |
 | `GOOGLE_CLIENT_SECRET` | Google OAuth client secret |
 | `PPS_AUTH_BASE_URL` | Public base URL of this service (used as `iss` in JWTs) |
-| `SERVER_PORT` | Port to listen on (default: `4000`) |
+| `PORT` | Port to listen on (default: `4000`) |
 
 ## Development
 

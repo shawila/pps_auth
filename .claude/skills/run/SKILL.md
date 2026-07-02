@@ -93,9 +93,7 @@ cargo run --bin seed
 | `JWT_PRIVATE_KEY_PATH` | Yes | `private.pem` | RS256 private key |
 | `JWT_PUBLIC_KEY_PATH` | Yes | `public.pem` | RS256 public key |
 | `JWKS_PATH` | Yes | `jwks.json` | Pre-generated JWKS file |
-| `PPS_AUTH_BASE_URL` | Yes | `http://localhost:4000` | Used as `iss` in JWTs |
-| `SERVER_PORT` | No | `4000` | |
-| `WEBAUTHN_RP_ID` | Yes | `localhost` | WebAuthn relying party ID |
-| `WEBAUTHN_RP_ORIGIN` | Yes | `http://localhost:4000` | WebAuthn origin |
+| `PPS_AUTH_BASE_URL` | No | `http://localhost:4000` | Used as `iss` in JWTs; WebAuthn config derived from this |
+| `PORT` | No | `4000` | |
 | `GOOGLE_CLIENT_ID` | Yes | — | Google OAuth app credential |
 | `GOOGLE_CLIENT_SECRET` | Yes | — | Google OAuth app credential |
