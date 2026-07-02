@@ -68,7 +68,12 @@ cargo run
 
 | Variable | Description |
 |---|---|
-| `DATABASE_URL` | PostgreSQL connection string |
+| `DATABASE_URL` | PostgreSQL connection string (alternative: use `POSTGRES_*` vars below) |
+| `POSTGRES_USER` | DB user — used to build `DATABASE_URL` when it is not set directly |
+| `POSTGRES_PASSWORD` | DB password — special characters are safe; URL-encoded automatically |
+| `POSTGRES_HOST` | DB host (default: `postgres`) |
+| `POSTGRES_PORT` | DB port (default: `5432`) |
+| `POSTGRES_DB` | DB name |
 | `JWT_PRIVATE_KEY_PATH` | Path to RS256 private key PEM file |
 | `JWT_PUBLIC_KEY_PATH` | Path to RS256 public key PEM file |
 | `GOOGLE_CLIENT_ID` | Google OAuth client ID |
