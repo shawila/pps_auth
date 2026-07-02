@@ -59,15 +59,31 @@ cargo run --bin seed
 ```
 
 This registers `portfolio_chatbot` and `trading_bot` as OIDC clients and prints a
-`client_secret` for each new client:
+`client_secret` for each new client. Copy each secret to the corresponding sister project `.env`:
 
-```
-client_id=portfolio_chatbot  client_secret=<copy to portfolio_chatbot/.env>
-client_id=trading_bot        client_secret=<copy to trading_bot/.env>
+| client_id | Sister project | env var |
+|---|---|---|
+| `portfolio_chatbot` | `portfolio_chatbot/.env` | `HATAN_PPS_AUTH_CLIENT_SECRET` |
+| `trading_bot` | `trading_bot/.env` | `TRADING_BOT_PPS_AUTH_CLIENT_SECRET` |
+
+Also ensure `trading_bot/.env` has `TRADING_BOT_BASE_URL` set — without it the redirect URI
+sent to pps_auth is empty and the auth flow fails with `redirect_uri_mismatch`:
+
+```bash
+TRADING_BOT_BASE_URL=http://localhost:3003
 ```
 
 Secrets are printed only on first run. Re-running seed updates redirect URIs but does
 not rotate existing secrets.
+
+If a sister project directory does not exist yet, save its secret in `pps_auth/.env` as a
+placeholder so it isn't lost:
+
+```bash
+# pps_auth/.env (temporary — move to sister project when it's cloned)
+PORTFOLIO_CHATBOT_CLIENT_SECRET=<secret>
+TRADING_BOT_CLIENT_SECRET=<secret>
+```
 
 ## 5. Verify
 
